@@ -20,7 +20,10 @@ let translations = {
         incorrect_result: "The result is not correct. It was {{ result }}.",
         invalid_expression: "The expression '{{ expression }}' is invalid.",
         invalid_digits: "The expression uses invalid digits.",
-        greeting: "Welcome, {{ name }}!"
+        greeting: "Welcome, {{ name }}!",
+        pass: "Pass",
+        pass_message: "The correct expression was: {{ correctExpression }}",
+        try_another_set: "Try Another Set"
     },
     cz: {
         welcome: "Vítejte v číselné hádance!",
@@ -39,7 +42,10 @@ let translations = {
         incorrect_result: "Výsledek není správný. Byl {{ result }}.",
         invalid_expression: "Výraz '{{ expression }}' není platný.",
         invalid_digits: "Výraz používá neplatné číslice.",
-        greeting: "Vítejte, {{ name }}!"
+        greeting: "Vítejte, {{ name }}!",
+        pass: "Přeskočit",
+        pass_message: "Správný výraz byl: {{ correctExpression }}",
+        try_another_set: "Zkusit jinou sadu"
     },
     uk: {
         welcome: "Ласкаво просимо до числової головоломки!",
@@ -58,13 +64,16 @@ let translations = {
         incorrect_result: "Результат неправильний. Було {{ result }}.",
         invalid_expression: "Вираз '{{ expression }}' недійсний.",
         invalid_digits: "Вираз використовує недійсні цифри.",
-        greeting: "Ласкаво просимо, {{ name }}!"
+        greeting: "Ласкаво просимо, {{ name }}!",
+        pass: "Пропустити",
+        pass_message: "Правильний вираз був: {{ correctExpression }}",
+        try_another_set: "Спробувати інший набір"
     }
 };
 let currentLanguage = "en";
 
 // Wait for DOM to be fully loaded before accessing elements
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // DOM elements
     const userNameSpan = document.getElementById('user-name');
     const scoreSpan = document.getElementById('score');
@@ -73,6 +82,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const expressionInput = document.getElementById('expression');
     const submitButton = document.getElementById('submit-button');
     const nextButton = document.getElementById('next-button');
+    const passButton = document.getElementById('pass-button');
     const nameInput = document.getElementById('name-input');
     const setNameButton = document.getElementById('set-name');
     const greetingP = document.getElementById('greeting');
@@ -81,7 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Function to update all translations on the page
     function updatePageLanguage() {
-        // Update all elements with data-translate attribute
         document.querySelectorAll('[data-translate]').forEach(element => {
             const key = element.getAttribute('data-translate');
             if (translations[currentLanguage][key]) {
@@ -93,14 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Update greeting if it exists
         if (name && greetingP) {
             greetingP.textContent = translations[currentLanguage].greeting.replace("{{ name }}", name);
         }
 
-        // Update any existing message
         if (messageP.textContent) {
-            // Reset message to trigger re-translation if needed
             const currentMessage = messageP.textContent;
             messageP.textContent = currentMessage;
         }
@@ -136,9 +142,45 @@ document.addEventListener('DOMContentLoaded', function() {
             scoreSpan.textContent = score;
             nextButton.style.display = "inline-block";
             submitButton.style.display = "none";
+            passButton.style.display = "none";
         } else {
             messageP.textContent = translations[currentLanguage].incorrect_result.replace("{{ result }}", eval(expression));
         }
+    }
+
+    // Function to find a correct expression
+    function findCorrectExpression() {
+        const operators = ['+', '-', '*', '/'];
+        const permutations = getPermutations(digits);
+
+        for (let perm of permutations) {
+            for (let op1 of operators) {
+                for (let op2 of operators) {
+                    for (let op3 of operators) {
+                        const expression = `${perm[0]}${op1}${perm[1]}${op2}${perm[2]}${op3}${perm[3]}`;
+                        if (checkExpression(expression)) {
+                            return expression;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    // Function to generate all permutations of the digits
+    function getPermutations(arr) {
+        if (arr.length <= 1) return [arr];
+        const result = [];
+        for (let i = 0; i < arr.length; i++) {
+            const current = arr[i];
+            const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+            const remainingPerms = getPermutations(remaining);
+            for (let perm of remainingPerms) {
+                result.push([current].concat(perm));
+            }
+        }
+        return result;
     }
 
     // Event Listeners
@@ -154,12 +196,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    passButton.addEventListener('click', () => {
+        const correctExpression = findCorrectExpression();
+        if (correctExpression) {
+            messageP.textContent = translations[currentLanguage].pass_message.replace("{{ correctExpression }}", correctExpression);
+            nextButton.style.display = "inline-block";
+            submitButton.style.display = "none";
+            passButton.style.display = "none";
+        } else {
+            messageP.textContent = translations[currentLanguage].invalid_expression;
+        }
+    });
+
     nextButton.addEventListener('click', () => {
         generateDigits();
         expressionInput.value = '';
         messageP.textContent = '';
         nextButton.style.display = "none";
         submitButton.style.display = "inline-block";
+        passButton.style.display = "inline-block";
     });
 
     // Set player name
@@ -184,7 +239,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('name-form').style.display = "block";
         document.getElementById('user-info').style.display = "none";
         document.getElementById('puzzle').style.display = "none";
-        updatePageLanguage(); // Initial translation
+        updatePageLanguage();
     }
 
     initGame();
