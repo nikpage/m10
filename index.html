@@ -78,6 +78,11 @@
             font-size: 18px;
             margin: 10px 0;
         }
+
+        .highlight {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -138,7 +143,7 @@
                 congratulations: "Congratulations, you solved the puzzle!",
                 incorrect_result: "The result is not correct. It was {{ result }}.",
                 invalid_expression: "The expression '{{ expression }}' is invalid.",
-                invalid_digits: "The expression uses invalid digits.",
+                invalid_digits: "The expression uses invalid digits: {{ invalidDigits }}. These are not allowed this time. Try again.",
                 greeting: "Welcome, {{ name }}!"
             },
             cz: {
@@ -157,7 +162,7 @@
                 congratulations: "Gratulujeme, vyřešili jste hádanku!",
                 incorrect_result: "Výsledek není správný. Byl {{ result }}.",
                 invalid_expression: "Výraz '{{ expression }}' není platný.",
-                invalid_digits: "Výraz používá neplatné číslice.",
+                invalid_digits: "Výraz používá neplatné číslice: {{ invalidDigits }}. Tyto nejsou povoleny. Zkuste to znovu.",
                 greeting: "Vítejte, {{ name }}!"
             },
             uk: {
@@ -176,7 +181,7 @@
                 congratulations: "Вітаємо, ви розв'язали головоломку!",
                 incorrect_result: "Результат неправильний. Було {{ result }}.",
                 invalid_expression: "Вираз '{{ expression }}' недійсний.",
-                invalid_digits: "Вираз використовує недійсні цифри.",
+                invalid_digits: "Вираз використовує недійсні цифри: {{ invalidDigits }}. Вони не дозволені цього разу. Спробуйте ще раз.",
                 greeting: "Ласкаво просимо, {{ name }}!"
             }
         };
@@ -234,21 +239,22 @@
             // Validate the expression
             function validateExpression(expression) {
                 const usedDigits = [...new Set(expression.replace(/[^\d]/g, '').split('').map(Number))];
-                return usedDigits.length === digits.length && usedDigits.every(digit => digits.includes(digit));
+                const invalidDigits = usedDigits.filter(digit => !digits.includes(digit));
+                return { isValid: invalidDigits.length === 0, invalidDigits };
             }
 
             // Check if the result is correct
             function checkExpression(expression) {
                 try {
                     const result = eval(expression);
-                    return result === 10;
+                    return { isCorrect: result === 10, result };
                 } catch (e) {
-                    return false;
+                    return { isCorrect: false, result: null };
                 }
             }
 
             // Show the message based on the result
-            function showMessage(isCorrect, expression) {
+            function showMessage(isCorrect, expression, result, invalidDigits) {
                 if (isCorrect) {
                     messageP.textContent = translations[currentLanguage].congratulations;
                     score++;
@@ -256,7 +262,13 @@
                     nextButton.style.display = "inline-block";
                     submitButton.style.display = "none";
                 } else {
-                    messageP.textContent = translations[currentLanguage].incorrect_result.replace("{{ result }}", eval(expression));
+                    if (result !== null) {
+                        messageP.innerHTML = `${translations[currentLanguage].incorrect_result.replace("{{ result }}", result)}<br>You entered: <span class="highlight">${expression}</span>`;
+                    } else if (invalidDigits.length > 0) {
+                        messageP.textContent = translations[currentLanguage].invalid_digits.replace("{{ invalidDigits }}", invalidDigits.join(", "));
+                    } else {
+                        messageP.textContent = translations[currentLanguage].invalid_expression.replace("{{ expression }}", expression);
+                    }
                 }
             }
 
@@ -265,11 +277,14 @@
                 const expression = expressionInput.value.trim();
                 if (!expression) {
                     messageP.textContent = translations[currentLanguage].invalid_expression.replace("{{ expression }}", expression);
-                } else if (validateExpression(expression)) {
-                    const isCorrect = checkExpression(expression);
-                    showMessage(isCorrect, expression);
                 } else {
-                    messageP.textContent = translations[currentLanguage].invalid_digits;
+                    const { isValid, invalidDigits } = validateExpression(expression);
+                    if (isValid) {
+                        const { isCorrect, result } = checkExpression(expression);
+                        showMessage(isCorrect, expression, result, invalidDigits);
+                    } else {
+                        showMessage(false, expression, null, invalidDigits);
+                    }
                 }
             });
 
