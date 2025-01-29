@@ -13,9 +13,8 @@ body {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-#name-form,
-#puzzle,
-#user-info {
+#start-page,
+#game-page {
     margin-bottom: 20px;
 }
 
@@ -40,37 +39,15 @@ button:hover {
     opacity: 0.9;
 }
 
-#submit-button {
-    background-color: #4CAF50;
+.active-button {
+    background-color: #4CAF50; /* Light green */
 }
 
-#submit-button:hover {
-    background-color: #45a049;
-}
-
-#next-button {
-    display: none;
-    background-color: #2196F3;
-}
-
-#next-button:hover {
-    background-color: #1976D2;
-}
-
-#pass-button {
-    background-color: #f39c12;
-}
-
-#pass-button:hover {
-    background-color: #e67e22;
-}
-
-.lang-name-button {
-    background-color: #555;
-}
-
-.lang-name-button:hover {
-    background-color: #444;
+#submit-button:hover,
+#pass-button:hover,
+#next-button:hover,
+#start-game:hover {
+    background-color: #45a049; /* Darker green */
 }
 
 #message {
@@ -95,4 +72,9 @@ select {
 .score-display {
     font-size: 18px;
     margin: 10px 0;
+}
+
+.highlight-error {
+    color: red;
+    font-weight: bold;
 }

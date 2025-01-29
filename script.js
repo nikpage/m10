@@ -23,7 +23,8 @@ let translations = {
         greeting: "Welcome, {{ name }}!",
         pass: "Pass",
         pass_message: "The correct expression was: {{ correctExpression }}",
-        try_another_set: "Try Another Set"
+        try_another_set: "Try Another Set",
+        expression_error: "Your expression '{{ expression }}' is invalid. It evaluates to {{ result }}."
     },
     cz: {
         welcome: "Vítejte v číselné hádance!",
@@ -45,7 +46,8 @@ let translations = {
         greeting: "Vítejte, {{ name }}!",
         pass: "Přeskočit",
         pass_message: "Správný výraz byl: {{ correctExpression }}",
-        try_another_set: "Zkusit jinou sadu"
+        try_another_set: "Zkusit jinou sadu",
+        expression_error: "Váš výraz '{{ expression }}' je neplatný. Výsledek je {{ result }}."
     },
     uk: {
         welcome: "Ласкаво просимо до числової головоломки!",
@@ -67,7 +69,8 @@ let translations = {
         greeting: "Ласкаво просимо, {{ name }}!",
         pass: "Пропустити",
         pass_message: "Правильний вираз був: {{ correctExpression }}",
-        try_another_set: "Спробувати інший набір"
+        try_another_set: "Спробувати інший набір",
+        expression_error: "Ваш вираз '{{ expression }}' недійсний. Результат: {{ result }}."
     }
 };
 let currentLanguage = "en";
@@ -84,10 +87,11 @@ document.addEventListener('DOMContentLoaded', function () {
     const nextButton = document.getElementById('next-button');
     const passButton = document.getElementById('pass-button');
     const nameInput = document.getElementById('name-input');
-    const setNameButton = document.getElementById('set-name');
+    const startGameButton = document.getElementById('start-game');
     const greetingP = document.getElementById('greeting');
     const languageSelect = document.getElementById('language-select');
-    const changeLanguageButton = document.getElementById('change-language');
+    const startPage = document.getElementById('start-page');
+    const gamePage = document.getElementById('game-page');
 
     // Function to update all translations on the page
     function updatePageLanguage() {
@@ -104,11 +108,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         if (name && greetingP) {
             greetingP.textContent = translations[currentLanguage].greeting.replace("{{ name }}", name);
-        }
-
-        if (messageP.textContent) {
-            const currentMessage = messageP.textContent;
-            messageP.textContent = currentMessage;
         }
     }
 
@@ -144,7 +143,10 @@ document.addEventListener('DOMContentLoaded', function () {
             submitButton.style.display = "none";
             passButton.style.display = "none";
         } else {
-            messageP.textContent = translations[currentLanguage].incorrect_result.replace("{{ result }}", eval(expression));
+            const result = eval(expression);
+            messageP.innerHTML = translations[currentLanguage].expression_error
+                .replace("{{ expression }}", `<span class="highlight-error">${expression}</span>`)
+                .replace("{{ result }}", result);
         }
     }
 
@@ -217,28 +219,26 @@ document.addEventListener('DOMContentLoaded', function () {
         passButton.style.display = "inline-block";
     });
 
-    // Set player name
-    setNameButton.addEventListener('click', () => {
+    // Start game
+    startGameButton.addEventListener('click', () => {
         name = nameInput.value.trim() || "Guest";
         userNameSpan.textContent = name;
         greetingP.textContent = translations[currentLanguage].greeting.replace("{{ name }}", name);
-        document.getElementById('name-form').style.display = "none";
-        document.getElementById('user-info').style.display = "block";
-        document.getElementById('puzzle').style.display = "block";
+        startPage.style.display = "none";
+        gamePage.style.display = "block";
         generateDigits();
     });
 
     // Change language
-    changeLanguageButton.addEventListener('click', () => {
+    languageSelect.addEventListener('change', () => {
         currentLanguage = languageSelect.value;
         updatePageLanguage();
     });
 
     // Initialize game
     function initGame() {
-        document.getElementById('name-form').style.display = "block";
-        document.getElementById('user-info').style.display = "none";
-        document.getElementById('puzzle').style.display = "none";
+        startPage.style.display = "block";
+        gamePage.style.display = "none";
         updatePageLanguage();
     }
 

@@ -8,38 +8,36 @@
 </head>
 <body>
     <div class="container">
-        <!-- Language Selection -->
-        <div id="language-selection">
+        <!-- Name and Language Form -->
+        <div id="start-page">
+            <h2 data-translate="welcome">Welcome to Number Puzzle!</h2>
+            <input type="text" id="name-input" data-translate="name_placeholder" placeholder="Enter your name">
             <select id="language-select">
                 <option value="en">English</option>
                 <option value="cz">Čeština</option>
                 <option value="uk">Українська</option>
             </select>
-            <button id="change-language" class="lang-name-button" data-translate="change_language">Change Language</button>
+            <button id="start-game" class="active-button" data-translate="start_game">Start Game</button>
         </div>
 
-        <!-- Name Form -->
-        <div id="name-form">
-            <h2 data-translate="welcome">Welcome to Number Puzzle!</h2>
-            <input type="text" id="name-input" data-translate="name_placeholder" placeholder="Enter your name">
-            <button id="set-name" class="lang-name-button" data-translate="start_game">Start Game</button>
-        </div>
+        <!-- Game Page -->
+        <div id="game-page" style="display: none;">
+            <!-- User Info -->
+            <div id="user-info">
+                <p id="greeting"></p>
+                <p class="score-display"><span data-translate="player">Player</span>: <span id="user-name"></span> | <span data-translate="score">Score</span>: <span id="score">0</span></p>
+            </div>
 
-        <!-- User Info -->
-        <div id="user-info">
-            <p id="greeting"></p>
-            <p class="score-display"><span data-translate="player">Player</span>: <span id="user-name"></span> | <span data-translate="score">Score</span>: <span id="score">0</span></p>
-        </div>
-
-        <!-- Puzzle Section -->
-        <div id="puzzle">
-            <h3 data-translate="create_expression">Create an expression that equals 10 using these digits:</h3>
-            <p class="digits-display"><span data-translate="digits">Digits</span>: <span id="digits"></span></p>
-            <input type="text" id="expression" data-translate="expression_placeholder" placeholder="Enter your expression">
-            <button id="submit-button" data-translate="submit">Submit</button>
-            <button id="pass-button" data-translate="pass">Pass</button>
-            <button id="next-button" data-translate="try_another_set">Try Another Set</button>
-            <p id="message"></p>
+            <!-- Puzzle Section -->
+            <div id="puzzle">
+                <h3 data-translate="create_expression">Create an expression that equals 10 using these digits:</h3>
+                <p class="digits-display"><span data-translate="digits">Digits</span>: <span id="digits"></span></p>
+                <input type="text" id="expression" data-translate="expression_placeholder" placeholder="Enter your expression">
+                <button id="submit-button" class="active-button" data-translate="submit">Submit</button>
+                <button id="pass-button" class="active-button" data-translate="pass">Pass</button>
+                <button id="next-button" class="active-button" data-translate="try_another_set">Try Another Set</button>
+                <p id="message"></p>
+            </div>
         </div>
     </div>
 
