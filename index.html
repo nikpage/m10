@@ -34,7 +34,6 @@
 
         button {
             padding: 8px 16px;
-            background-color: #4CAF50;
             color: white;
             border: none;
             border-radius: 4px;
@@ -43,6 +42,14 @@
         }
 
         button:hover {
+            opacity: 0.9;
+        }
+
+        #submit-button {
+            background-color: #4CAF50;
+        }
+
+        #submit-button:hover {
             background-color: #45a049;
         }
 
@@ -53,6 +60,14 @@
 
         #next-button:hover {
             background-color: #1976D2;
+        }
+
+        #pass-button {
+            background-color: #f39c12;
+        }
+
+        #pass-button:hover {
+            background-color: #e67e22;
         }
 
         #message {
@@ -77,11 +92,6 @@
         .score-display {
             font-size: 18px;
             margin: 10px 0;
-        }
-
-        .highlight {
-            color: red;
-            font-weight: bold;
         }
     </style>
 </head>
@@ -116,7 +126,8 @@
             <p class="digits-display"><span data-translate="digits">Digits</span>: <span id="digits"></span></p>
             <input type="text" id="expression" data-translate="expression_placeholder" placeholder="Enter your expression">
             <button id="submit-button" data-translate="submit">Submit</button>
-            <button id="next-button" data-translate="next_puzzle">Next Puzzle</button>
+            <button id="pass-button" data-translate="pass">Pass</button>
+            <button id="next-button" data-translate="try_another_set">Try Another Set</button>
             <p id="message"></p>
         </div>
     </div>
@@ -143,8 +154,11 @@
                 congratulations: "Congratulations, you solved the puzzle!",
                 incorrect_result: "The result is not correct. It was {{ result }}.",
                 invalid_expression: "The expression '{{ expression }}' is invalid.",
-                invalid_digits: "The expression uses invalid digits: {{ invalidDigits }}. These are not allowed this time. Try again.",
-                greeting: "Welcome, {{ name }}!"
+                invalid_digits: "The expression uses invalid digits.",
+                greeting: "Welcome, {{ name }}!",
+                pass: "Pass",
+                pass_message: "The correct expression was: {{ correctExpression }}",
+                try_another_set: "Try Another Set"
             },
             cz: {
                 welcome: "Vítejte v číselné hádance!",
@@ -162,8 +176,11 @@
                 congratulations: "Gratulujeme, vyřešili jste hádanku!",
                 incorrect_result: "Výsledek není správný. Byl {{ result }}.",
                 invalid_expression: "Výraz '{{ expression }}' není platný.",
-                invalid_digits: "Výraz používá neplatné číslice: {{ invalidDigits }}. Tyto nejsou povoleny. Zkuste to znovu.",
-                greeting: "Vítejte, {{ name }}!"
+                invalid_digits: "Výraz používá neplatné číslice.",
+                greeting: "Vítejte, {{ name }}!",
+                pass: "Přeskočit",
+                pass_message: "Správný výraz byl: {{ correctExpression }}",
+                try_another_set: "Zkusit jinou sadu"
             },
             uk: {
                 welcome: "Ласкаво просимо до числової головоломки!",
@@ -181,8 +198,11 @@
                 congratulations: "Вітаємо, ви розв'язали головоломку!",
                 incorrect_result: "Результат неправильний. Було {{ result }}.",
                 invalid_expression: "Вираз '{{ expression }}' недійсний.",
-                invalid_digits: "Вираз використовує недійсні цифри: {{ invalidDigits }}. Вони не дозволені цього разу. Спробуйте ще раз.",
-                greeting: "Ласкаво просимо, {{ name }}!"
+                invalid_digits: "Вираз використовує недійсні цифри.",
+                greeting: "Ласкаво просимо, {{ name }}!",
+                pass: "Пропустити",
+                pass_message: "Правильний вираз був: {{ correctExpression }}",
+                try_another_set: "Спробувати інший набір"
             }
         };
         let currentLanguage = "en";
@@ -197,6 +217,7 @@
             const expressionInput = document.getElementById('expression');
             const submitButton = document.getElementById('submit-button');
             const nextButton = document.getElementById('next-button');
+            const passButton = document.getElementById('pass-button');
             const nameInput = document.getElementById('name-input');
             const setNameButton = document.getElementById('set-name');
             const greetingP = document.getElementById('greeting');
@@ -205,7 +226,6 @@
 
             // Function to update all translations on the page
             function updatePageLanguage() {
-                // Update all elements with data-translate attribute
                 document.querySelectorAll('[data-translate]').forEach(element => {
                     const key = element.getAttribute('data-translate');
                     if (translations[currentLanguage][key]) {
@@ -217,14 +237,11 @@
                     }
                 });
 
-                // Update greeting if it exists
                 if (name && greetingP) {
                     greetingP.textContent = translations[currentLanguage].greeting.replace("{{ name }}", name);
                 }
 
-                // Update any existing message
                 if (messageP.textContent) {
-                    // Reset message to trigger re-translation if needed
                     const currentMessage = messageP.textContent;
                     messageP.textContent = currentMessage;
                 }
@@ -239,37 +256,66 @@
             // Validate the expression
             function validateExpression(expression) {
                 const usedDigits = [...new Set(expression.replace(/[^\d]/g, '').split('').map(Number))];
-                const invalidDigits = usedDigits.filter(digit => !digits.includes(digit));
-                return { isValid: invalidDigits.length === 0, invalidDigits };
+                return usedDigits.length === digits.length && usedDigits.every(digit => digits.includes(digit));
             }
 
             // Check if the result is correct
             function checkExpression(expression) {
                 try {
                     const result = eval(expression);
-                    return { isCorrect: result === 10, result };
+                    return result === 10;
                 } catch (e) {
-                    return { isCorrect: false, result: null };
+                    return false;
                 }
             }
 
             // Show the message based on the result
-            function showMessage(isCorrect, expression, result, invalidDigits) {
+            function showMessage(isCorrect, expression) {
                 if (isCorrect) {
                     messageP.textContent = translations[currentLanguage].congratulations;
                     score++;
                     scoreSpan.textContent = score;
                     nextButton.style.display = "inline-block";
                     submitButton.style.display = "none";
+                    passButton.style.display = "none";
                 } else {
-                    if (result !== null) {
-                        messageP.innerHTML = `${translations[currentLanguage].incorrect_result.replace("{{ result }}", result)}<br>You entered: <span class="highlight">${expression}</span>`;
-                    } else if (invalidDigits.length > 0) {
-                        messageP.textContent = translations[currentLanguage].invalid_digits.replace("{{ invalidDigits }}", invalidDigits.join(", "));
-                    } else {
-                        messageP.textContent = translations[currentLanguage].invalid_expression.replace("{{ expression }}", expression);
+                    messageP.textContent = translations[currentLanguage].incorrect_result.replace("{{ result }}", eval(expression));
+                }
+            }
+
+            // Function to find a correct expression
+            function findCorrectExpression() {
+                const operators = ['+', '-', '*', '/'];
+                const permutations = getPermutations(digits);
+
+                for (let perm of permutations) {
+                    for (let op1 of operators) {
+                        for (let op2 of operators) {
+                            for (let op3 of operators) {
+                                const expression = `${perm[0]}${op1}${perm[1]}${op2}${perm[2]}${op3}${perm[3]}`;
+                                if (checkExpression(expression)) {
+                                    return expression;
+                                }
+                            }
+                        }
                     }
                 }
+                return null;
+            }
+
+            // Function to generate all permutations of the digits
+            function getPermutations(arr) {
+                if (arr.length <= 1) return [arr];
+                const result = [];
+                for (let i = 0; i < arr.length; i++) {
+                    const current = arr[i];
+                    const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+                    const remainingPerms = getPermutations(remaining);
+                    for (let perm of remainingPerms) {
+                        result.push([current].concat(perm));
+                    }
+                }
+                return result;
             }
 
             // Event Listeners
@@ -277,14 +323,23 @@
                 const expression = expressionInput.value.trim();
                 if (!expression) {
                     messageP.textContent = translations[currentLanguage].invalid_expression.replace("{{ expression }}", expression);
+                } else if (validateExpression(expression)) {
+                    const isCorrect = checkExpression(expression);
+                    showMessage(isCorrect, expression);
                 } else {
-                    const { isValid, invalidDigits } = validateExpression(expression);
-                    if (isValid) {
-                        const { isCorrect, result } = checkExpression(expression);
-                        showMessage(isCorrect, expression, result, invalidDigits);
-                    } else {
-                        showMessage(false, expression, null, invalidDigits);
-                    }
+                    messageP.textContent = translations[currentLanguage].invalid_digits;
+                }
+            });
+
+            passButton.addEventListener('click', () => {
+                const correctExpression = findCorrectExpression();
+                if (correctExpression) {
+                    messageP.textContent = translations[currentLanguage].pass_message.replace("{{ correctExpression }}", correctExpression);
+                    nextButton.style.display = "inline-block";
+                    submitButton.style.display = "none";
+                    passButton.style.display = "none";
+                } else {
+                    messageP.textContent = translations[currentLanguage].invalid_expression;
                 }
             });
 
@@ -294,6 +349,7 @@
                 messageP.textContent = '';
                 nextButton.style.display = "none";
                 submitButton.style.display = "inline-block";
+                passButton.style.display = "inline-block";
             });
 
             // Set player name
@@ -318,7 +374,7 @@
                 document.getElementById('name-form').style.display = "block";
                 document.getElementById('user-info').style.display = "none";
                 document.getElementById('puzzle').style.display = "none";
-                updatePageLanguage(); // Initial translation
+                updatePageLanguage();
             }
 
             initGame();
